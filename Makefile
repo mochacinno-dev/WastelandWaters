@@ -25,6 +25,36 @@ endif
 
 CFLAGS = -std=c99 -Wall -Wextra -O2 $(CFLAGS_EXTRA)
 
+# ── Cross-compile para Windows desde Linux (MinGW) ──
+win:
+	@mkdir -p build/win build/win/core build/win/mission1 build/win/mission2 build/win/mission3 build/win/mission4 build/win/mission5 build/win/mission6 build/win/mission7 build/win/mission8
+	@echo "Compilando para Windows..."
+	@for src in $(SRCS); do \
+		obj=build/win/$$(echo $$src | sed 's|^src/||; s|\.c$$|.o|'); \
+		echo "  CC $$src"; \
+		x86_64-w64-mingw32-gcc -std=c99 -Wall -Wextra -O2 -mwindows \
+			-I/tmp/raylib-win/raylib-5.0_win64_mingw-w64/include \
+			-Isrc/core -c $$src -o $$obj || exit 1; \
+	done
+	@echo "Enlazando para Windows..."
+	@x86_64-w64-mingw32-gcc \
+		build/win/main.o \
+		build/win/core/trivia_manager.o \
+		build/win/mission1/mission1.o \
+		build/win/mission2/mission2.o \
+		build/win/mission3/mission3.o \
+		build/win/mission4/mission4.o \
+		build/win/mission5/mission5.o \
+		build/win/mission6/mission6.o \
+		build/win/mission7/mission7.o \
+		build/win/mission8/mission8.o \
+		-L/tmp/raylib-win/raylib-5.0_win64_mingw-w64/lib \
+		-lraylib -lopengl32 -lgdi32 -lwinmm -lm -static \
+		-o build/win/WastelandWaters.exe
+	@echo "Compilado: build/win/WastelandWaters.exe"
+
+.PHONY: win
+
 RAYLIB_INC ?= /usr/local/include
 RAYLIB_LIB ?= /usr/local/lib
 
@@ -43,7 +73,7 @@ SRCS = src/main.c \
 
 OBJS = $(patsubst src/%.c,$(BUILD)/%.o,$(SRCS))
 
-.PHONY: all clean run
+.PHONY: all clean run win
 
 all: $(BUILD)/$(TARGET)$(EXT)
 

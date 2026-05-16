@@ -590,7 +590,7 @@ bool ShowMissionIntro(int mission_number,
         DrawRectangleRounded((Rectangle){(float)cx,(float)cy,(float)cw,(float)ch},
                               0.05f, 12, COL_UI_PANEL);
         DrawRectangleRoundedLines((Rectangle){(float)cx,(float)cy,(float)cw,(float)ch},
-                                   0.05f, 12, COL_UI_BORDER);
+                           0.05f, 12, 2.0f, COL_UI_BORDER);
 
         /* número de misión */
         char mn[32];
@@ -683,5 +683,5 @@ void UI_DrawWrappedText(const char *text, int x, int y, int width, int font_size
 
 void UI_DrawPanel(Rectangle r, Color bg, Color border, int radius) {
     DrawRectangleRounded(r, (float)radius / 100.0f, 8, bg);
-    DrawRectangleRoundedLines(r, (float)radius / 100.0f, 8, border);
+    DrawRectangleRoundedLines(r, (float)radius / 100.0f, 8, 2.0f, border);
 }
