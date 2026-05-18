@@ -93,14 +93,14 @@ static void MainMenu_Run(void) {
 
         /* cuadrícula de misiones: 2 columnas × 4 filas */
         const char *mission_names[] = {
-            "Mision 1 — Tipos de Plastico",
-            "Mision 2 — Polimeros",
-            "Mision 3 — Contaminantes",
-            "Mision 4 — Paises Contaminantes",
-            "Mision 5 — Corrientes Superficiales",
-            "Mision 6 — Reciclaje",
-            "Mision 7 — Islas de Plastico",
-            "Mision 8 — Corrientes Oceanicas"
+            "Mision 1 .. Tipos de Plastico",
+            "Mision 2 .. Polimeros",
+            "Mision 3 .. Contaminantes",
+            "Mision 4 .. Paises Contaminantes",
+            "Mision 5 .. Corrientes Superficiales",
+            "Mision 6 .. Reciclaje",
+            "Mision 7 .. Islas de Plastico",
+            "Mision 8 .. Corrientes Oceanicas"
         };
 
         float btn_w = 560, btn_h = 62;
