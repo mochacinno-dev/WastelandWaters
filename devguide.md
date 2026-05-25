@@ -1,4 +1,5 @@
 # PlasticGame — Guía de implementación en C + Raylib
+
 ## Índice
 
 1. [Estructura del proyecto](#1-estructura-del-proyecto)
@@ -25,7 +26,7 @@
 
 ## 1. Estructura del proyecto
 
-```
+``` bash
 PlasticGame/
 ├── Makefile
 ├── README.md
@@ -59,11 +60,11 @@ A diferencia de Unity, **no hay Inspector ni ScriptableObjects**. Toda la config
 ## 2. Requisitos previos
 
 | Herramienta | Versión mínima | Notas |
-|---|---|---|
+|-------------|----------------|-------|
 | GCC o Clang | cualquiera moderna | En Windows: MinGW-w64 |
 | Raylib | 4.5 o superior | Ver sección 3 |
 | Make | cualquiera | En Windows: `mingw32-make` |
-| Sistema operativo | Linux / macOS / Windows | Probado en Ubuntu 22.04 y macOS 13 |
+| Sistema operativo | Linux / macOS / Windows | Probado en Arch Linux |
 
 No se requiere ninguna dependencia adicional. Raylib incluye todo lo necesario (OpenGL, audio, entrada).
 
@@ -71,17 +72,11 @@ No se requiere ninguna dependencia adicional. Raylib incluye todo lo necesario (
 
 ## 3. Instalar Raylib
 
-### Linux (Ubuntu/Debian)
+### Arch Linux
 
 ```bash
 # Opción A — paquete del sistema (más fácil)
-sudo apt-get install libraylib-dev
-
-# Opción B — compilar desde fuente (versión más reciente)
-git clone --depth 1 https://github.com/raysan5/raylib.git
-cd raylib/src
-make PLATFORM=PLATFORM_DESKTOP
-sudo make install
+sudo pacman -S raylib
 ```
 
 ### macOS
@@ -96,6 +91,7 @@ brew install raylib
 1. Descarga el instalador de Raylib desde [raylib.com](https://www.raylib.com)  
    o usa el paquete `w64devkit` que ya incluye Raylib.
 2. Ajusta las rutas en el `Makefile`:
+
    ```makefile
    RAYLIB_INC = C:/raylib/include
    RAYLIB_LIB = C:/raylib/lib
@@ -117,7 +113,7 @@ Si se abre una ventana en blanco, Raylib está correctamente instalado.
 
 ```bash
 # Clonar o descomprimir el proyecto
-cd PlasticGame
+cd WastelandWaters
 
 # Compilar todo (primera vez)
 make
@@ -129,7 +125,7 @@ make run
 make clean
 ```
 
-El ejecutable queda en `build/PlasticGame` (Linux/macOS) o `build/PlasticGame.exe` (Windows).
+El ejecutable queda en `build/WastelandWaters` (Linux/macOS) o `build/WastelandWaters.exe` (Windows).
 
 ### Compilar en modo Debug
 
@@ -141,7 +137,7 @@ make CFLAGS="-std=c99 -Wall -g -O0"
 
 ## 5. Arquitectura: cómo se conectan los archivos
 
-```
+``` bash
 main.c
 │
 ├── TriviaManager_Init()          ← inicializa el singleton global g_trivia
@@ -179,7 +175,7 @@ El motor de trivia es **completamente independiente** de cada minijuego. Funcion
 
 ### Ciclo de vida
 
-```
+``` bash
 TriviaManager_Init()
       │
 TriviaManager_StartMission(MissionID m)
@@ -304,7 +300,7 @@ Carga las texturas en `Mission1_Init()` y libéralas con `UnloadTexture()` al te
 
 **Archivo:** `src/mission2/mission2.c`
 
-### Mecánica
+### Mecánica del Nivel
 
 Se muestran casilleros vacíos en fila (la cadena del polímero) y una paleta de monómeros en la parte inferior. El jugador arrastra el monómero correcto a los casilleros para completar la cadena.
 
@@ -337,7 +333,7 @@ El array `s_all_monomers` contiene todos los monómeros disponibles como distrac
 
 **Archivo:** `src/mission3/mission3.c`
 
-### Mecánica
+### Mecánica de la Misión
 
 Tower defense simplificado. El jugador hace clic en el área del río para colocar filtros circulares. Las partículas de microplástico viajan por los waypoints hacia la "cadena alimentaria"; si un filtro las intersecta, quedan atrapadas.
 
@@ -387,7 +383,8 @@ CountryPin cp[] = {
 ```
 
 Para convertir coordenadas geográficas reales a normalizadas en un mapa Mercator 2:1:
-```
+
+```bash
 norm_x = (longitud + 180) / 360
 norm_y = 1 - (latitud + 90) / 180   (invertido porque Y crece hacia abajo)
 ```
@@ -541,7 +538,7 @@ void DrawSlider(Rectangle track, float value, Color fill) {
 
 ## 15. Flujo general de una misión
 
-```
+``` bash
 MissionX_Run()
 │
 ├── MissionX_Init()
@@ -575,6 +572,7 @@ MissionX_Run()
 ```
 
 La misión puede terminar por dos razones:
+
 - **Trivia completada**: `g_trivia.state == TRIVIA_MISSION_COMPLETE` (las 6 preguntas respondidas)
 - **Minijuego completado**: el minijuego tiene su propia condición de victoria y puede cambiar `g_current_scene` directamente
 
@@ -720,6 +718,7 @@ UnloadFont(font);
 ### Cambiar la resolución
 
 En `plastic_game.h`:
+
 ```c
 #define SCREEN_W  1920
 #define SCREEN_H  1080

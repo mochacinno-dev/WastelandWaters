@@ -11,13 +11,13 @@ Cada misión está enfocada a un término diferente o pilar diferente en el tema
 - [x] Mejora de resolución.
 - [x] Mejora de colores del fondo bajo soluciónn de contraste general.
 - [x] Mejora de tiempo y accesibilidad.
-- [ ] Trailer
 - [x] Herramienta para brindar información a los estudiantes de forma educativa y amigable.
 - [x] Pantallas de explicación a los estudiantes.
-- [ ] Presentación y Tutorial
-- [ ] Manual general de uso
 - [x] Corrección del RAE
 - [x] Huella
+- [ ] Trailer
+- [ ] Presentación y Tutorial
+- [ ] Manual general de uso
 - [ ] Arreglo de Misión 2: Cadenas de Polímeros.
 
 ### Compilation instructions

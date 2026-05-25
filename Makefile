@@ -55,8 +55,8 @@ win:
 
 .PHONY: win
 
-RAYLIB_INC ?= /usr/local/include
-RAYLIB_LIB ?= /usr/local/lib
+RAYLIB_INC ?= /tmp/raylib-win/raylib-5.0_win64_mingw-w64/include
+RAYLIB_LIB ?= /tmp/raylib-win/raylib-5.0_win64_mingw-w64/lib
 
 INCLUDES = -I$(RAYLIB_INC) -Isrc/core
 

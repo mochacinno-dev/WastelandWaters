@@ -14,7 +14,7 @@
 ───────────────────────────────────────────── */
 #define SCREEN_W   1600
 #define SCREEN_H    900
-#define TARGET_FPS   60
+#define TARGET_FPS  120
 
 /* ─────────────────────────────────────────────
    LAYOUT — panel de trivia a la derecha
