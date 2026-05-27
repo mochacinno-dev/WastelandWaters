@@ -1,10 +1,5 @@
 #include "../core/plastic_game.h"
-
-/* ──────────────────────────────────────────────────
-   MISIÓN 1 — Clasificación de Plásticos
-   Drag & drop hacia los contenedores correctos.
-   Trivia aparece DESPUÉS de completar el minijuego.
-────────────────────────────────────────────────── */
+#include "../core/locale.h"
 
 #define M1_ITEM_COUNT 6
 #define M1_BIN_COUNT  6
@@ -33,7 +28,7 @@ typedef struct {
     PlasticItem items[M1_ITEM_COUNT];
     RecycleBin  bins[M1_BIN_COUNT];
     int         placed_count;
-    bool        minigame_done;  /* minijuego completado → mostrar trivia */
+    bool        minigame_done;
     bool        trivia_phase;
 } Mission1State;
 
@@ -42,15 +37,15 @@ static Mission1State m1;
 static void Mission1_Init(void) {
     memset(&m1, 0, sizeof(m1));
 
-    const char *names[M1_ITEM_COUNT]  = {"Botella de agua","Envase detergente",
-                                          "Tuberia","Bolsa supermercado",
-                                          "Tapa de yogurt","Vaso de unicel"};
+    /* Item names come from locale */
+    const char *names[M1_ITEM_COUNT] = {
+        LOC(S_M1_ITEM0), LOC(S_M1_ITEM1), LOC(S_M1_ITEM2),
+        LOC(S_M1_ITEM3), LOC(S_M1_ITEM4), LOC(S_M1_ITEM5)
+    };
     const char *types[M1_ITEM_COUNT]  = {"PET","HDPE","PVC","LDPE","PP","PS"};
     int nums[M1_ITEM_COUNT]           = {1,2,3,4,5,6};
-    Color colors[M1_ITEM_COUNT]       = {COL_PLASTIC_YEL, BLUE, ORANGE,
-                                          GREEN, PURPLE, RED};
+    Color colors[M1_ITEM_COUNT]       = {COL_PLASTIC_YEL, BLUE, ORANGE, GREEN, PURPLE, RED};
 
-    /* ítems en columna izquierda */
     float start_x = 40, start_y = 140;
     for (int i = 0; i < M1_ITEM_COUNT; i++) {
         strncpy(m1.items[i].name,  names[i], 63);
@@ -61,7 +56,7 @@ static void Mission1_Init(void) {
         m1.items[i].rect   = (Rectangle){start_x, start_y + i*110.0f, 170, 88};
     }
 
-    /* contenedores: 2 filas × 3 columnas dentro del área del minijuego (GAME_W = 1080) */
+    /* bins: type labels stay in the plastic resin codes (same in both languages) */
     float bin_x = 260, bin_y = 80;
     Color bin_colors[M1_BIN_COUNT] = {COL_PLASTIC_YEL, BLUE, ORANGE, GREEN, PURPLE, RED};
     for (int i = 0; i < M1_BIN_COUNT; i++) {
@@ -75,10 +70,9 @@ static void Mission1_Init(void) {
     TriviaManager_StartMission(MISSION_1_TIPOS_PLASTICO);
 }
 
-/* ── helper: botón Back ── */
 static bool DrawBackButton(void) {
     Rectangle r = {GAME_W - 200, SCREEN_H - 60, 180, 44};
-    return UI_Button(r, "Menu Principal", COL_UI_PANEL, WHITE);
+    return UI_Button(r, LOC(S_BTN_MENU_MAIN), COL_UI_PANEL, WHITE);
 }
 
 static void Mission1_Update(float dt) {
@@ -140,15 +134,14 @@ static void Mission1_Update(float dt) {
         }
     }
 
-    /* transición a trivia */
     if (m1.minigame_done) m1.trivia_phase = true;
 }
 
 static void Mission1_DrawMinigame(void) {
-    DrawText("MISION 1 — Clasifica los Plasticos", 20, 14, 26, COL_UI_ACCENT);
-    DrawText("Arrastra cada plastico a su contenedor correcto", 20, 48, 20, LIGHTGRAY);
+    DrawText(LOC(S_M1_TITLE), 20, 14, 26, COL_UI_ACCENT);
+    DrawText(LOC(S_M1_INSTRUCTION), 20, 48, 20, LIGHTGRAY);
 
-    /* contenedores */
+    /* bins */
     for (int b = 0; b < M1_BIN_COUNT; b++) {
         RecycleBin *bin = &m1.bins[b];
         Color c = bin->correct_anim
@@ -168,7 +161,7 @@ static void Mission1_DrawMinigame(void) {
                  (int)(bin->rect.y + 46), 36, WHITE);
     }
 
-    /* ítems */
+    /* items */
     for (int i = 0; i < M1_ITEM_COUNT; i++) {
         PlasticItem *item = &m1.items[i];
         if (item->placed) continue;
@@ -181,36 +174,29 @@ static void Mission1_DrawMinigame(void) {
         DrawText(nb, (int)(item->rect.x+8), (int)(item->rect.y+32), 28, WHITE);
     }
 
-    /* estado */
+    /* status */
     char prog[40];
-    snprintf(prog, sizeof(prog), "Colocados: %d / %d", m1.placed_count, M1_ITEM_COUNT);
+    snprintf(prog, sizeof(prog), LOC(S_M1_PLACED), m1.placed_count, M1_ITEM_COUNT);
     DrawText(prog, 20, SCREEN_H - 40, 22, LIGHTGRAY);
 
     if (m1.minigame_done) {
         DrawRectangle(0, 0, GAME_W, SCREEN_H, ColorAlpha(BLACK, 0.55f));
-        const char *msg = "Clasificacion completa!";
-        int mw = MeasureText(msg, 42);
-        DrawText(msg, GAME_W/2 - mw/2, SCREEN_H/2 - 50, 42, COL_CORRECT);
-        const char *msg2 = "Cargando preguntas...";
-        int m2w = MeasureText(msg2, 24);
-        DrawText(msg2, GAME_W/2 - m2w/2, SCREEN_H/2 + 14, 24, WHITE);
+        int mw = MeasureText(LOC(S_M1_CLASSIFY_DONE), 42);
+        DrawText(LOC(S_M1_CLASSIFY_DONE), GAME_W/2 - mw/2, SCREEN_H/2 - 50, 42, COL_CORRECT);
+        int m2w = MeasureText(LOC(S_LOADING_TRIVIA), 24);
+        DrawText(LOC(S_LOADING_TRIVIA), GAME_W/2 - m2w/2, SCREEN_H/2 + 14, 24, WHITE);
     }
 }
 
 static void Mission1_DrawTrivia(void) {
-    /* fondo de instrucción */
     DrawRectangle(0, 0, GAME_W, SCREEN_H, COL_UI_BG);
-    const char *inst = "MISION 1 — Trivia: Tipos de Plastico";
-    int iw = MeasureText(inst, 28);
-    DrawText(inst, GAME_W/2 - iw/2, 20, 28, COL_UI_ACCENT);
-
-    /* panel de trivia centrado en el área del juego */
+    int iw = MeasureText(LOC(S_M1_TRIVIA_TITLE), 28);
+    DrawText(LOC(S_M1_TRIVIA_TITLE), GAME_W/2 - iw/2, 20, 28, COL_UI_ACCENT);
     TriviaManager_DrawPanel((Rectangle){(GAME_W - 820)/2.0f, 70, 820, SCREEN_H - 80});
 }
 
 static void Mission1_Draw(void) {
     ClearBackground(COL_UI_BG);
-
     if (!m1.trivia_phase) {
         Mission1_DrawMinigame();
         DrawBackButton();
@@ -220,17 +206,10 @@ static void Mission1_Draw(void) {
 }
 
 void Mission1_Run(void) {
-    /* pantalla de introducción */
     bool go = ShowMissionIntro(1,
-        "Tipos de Plastico",
-        "La Gran Mancha de Plastico del Pacifico",
-        "El Gran Parche de Basura del Pacifico tiene mas de 1.6 millones de km2 de extension "
-        "y contiene mas de 80.000 toneladas de plastico. Pero, ¿sabias que no todo el plastico "
-        "es igual? Existen 7 categorias principales de plasticos, cada una con propiedades y "
-        "riesgos diferentes. Los tipos 1 (PET) y 2 (HDPE) son los mas reciclables; el tipo 6 "
-        "(poliestireno, unicel) casi nunca se recicla y termina fragmentandose en microplasticos "
-        "en el oceano. Aprende a identificarlos: el primer paso para reducir la contaminacion "
-        "es saber exactamente que estas descartando.");
+        LOC(S_M1_INTRO_TITLE),
+        LOC(S_M1_INTRO_TOPIC),
+        LOC(S_M1_INTRO_BODY));
     if (!go) { g_current_scene = SCENE_MAIN_MENU; return; }
 
     Mission1_Init();
@@ -241,7 +220,6 @@ void Mission1_Run(void) {
         Mission1_Draw();
         EndDrawing();
         if (g_trivia.state == TRIVIA_MISSION_COMPLETE) break;
-        /* botón menú (solo en fase minijuego) */
         if (!m1.trivia_phase && DrawBackButton()) {
             g_current_scene = SCENE_MAIN_MENU;
             return;

@@ -1,8 +1,5 @@
 #include "../core/plastic_game.h"
-
-/* ──────────────────────────────────────────────────
-   MISIÓN 2 — Cadena de Polímeros
-────────────────────────────────────────────────── */
+#include "../core/locale.h"
 
 #define M2_CHALLENGE_COUNT  6
 #define M2_CHAIN_LEN        5
@@ -10,7 +7,7 @@
 
 typedef struct {
     char polymer_name[64];
-    char monomer[32];
+    char monomer[32];       /* must match a palette entry exactly */
     char hint[256];
     Color color;
 } PolymerChallenge;
@@ -48,33 +45,35 @@ typedef struct {
 
 static Mission2State m2;
 
-static const PolymerChallenge s_challenges[M2_CHALLENGE_COUNT] = {
-    {"Polietileno (PE)",  "Etileno",
-     "Monomero: Etileno (C2H4). El polietileno es el plastico mas producido del mundo.",
-     COL_PLASTIC_YEL},
-    {"Polipropileno (PP)","Propileno",
-     "Monomero: Propileno (C3H6). Usado en tapas, envases y fibras textiles.", BLUE},
-    {"Poliestireno (PS)", "Estireno",
-     "Monomero: Estireno. El unicel (EPS) es poliestireno expandido.", ORANGE},
-    {"PVC",               "Cloruro de vinilo",
-     "Monomero: Cloruro de vinilo. El Cl en su cadena lo hace dificil de reciclar.", RED},
-    {"Nylon (PA6)",       "Caprolactama",
-     "Monomero: Caprolactama. Es un polimero sintetico de alto rendimiento.", PURPLE},
-    {"Celulosa (natural)","Glucosa",
-     "Monomero: Glucosa. La celulosa es el polimero natural mas abundante en la Tierra.", GREEN},
-};
-
-static const char *s_all_monomers[M2_MONOMER_PALETTE] = {
-    "Etileno","Propileno","Estireno","Cloruro de vinilo",
-    "Caprolactama","Glucosa","Benceno","Acetileno"
-};
 static Color s_monomer_colors[M2_MONOMER_PALETTE] = {
     COL_PLASTIC_YEL, BLUE, ORANGE, RED, PURPLE, GREEN, SKYBLUE, PINK
 };
 
+/* Build challenges from locale strings */
+static void Mission2_BuildChallenges(void) {
+    struct { StrKey poly; StrKey mono; StrKey hint; Color col; } defs[M2_CHALLENGE_COUNT] = {
+        { S_M2_CH0_POLY, S_M2_CH0_MONO, S_M2_CH0_HINT, COL_PLASTIC_YEL },
+        { S_M2_CH1_POLY, S_M2_CH1_MONO, S_M2_CH1_HINT, BLUE             },
+        { S_M2_CH2_POLY, S_M2_CH2_MONO, S_M2_CH2_HINT, ORANGE           },
+        { S_M2_CH3_POLY, S_M2_CH3_MONO, S_M2_CH3_HINT, RED              },
+        { S_M2_CH4_POLY, S_M2_CH4_MONO, S_M2_CH4_HINT, PURPLE           },
+        { S_M2_CH5_POLY, S_M2_CH5_MONO, S_M2_CH5_HINT, GREEN            },
+    };
+    for (int i = 0; i < M2_CHALLENGE_COUNT; i++) {
+        strncpy(m2.challenges[i].polymer_name, LOC(defs[i].poly), 63);
+        strncpy(m2.challenges[i].monomer,      LOC(defs[i].mono), 31);
+        strncpy(m2.challenges[i].hint,         LOC(defs[i].hint), 255);
+        m2.challenges[i].color = defs[i].col;
+    }
+}
+
 static void Mission2_BuildPalette(void) {
+    StrKey mono_keys[M2_MONOMER_PALETTE] = {
+        S_MONO_0, S_MONO_1, S_MONO_2, S_MONO_3,
+        S_MONO_4, S_MONO_5, S_MONO_6, S_MONO_7
+    };
     for (int i = 0; i < M2_MONOMER_PALETTE; i++) {
-        strncpy(m2.palette[i].monomer_name, s_all_monomers[i], 31);
+        strncpy(m2.palette[i].monomer_name, LOC(mono_keys[i]), 31);
         m2.palette[i].color  = s_monomer_colors[i];
         float px = 30.0f + i * 120.0f;
         float py = SCREEN_H - 130.0f;
@@ -111,7 +110,7 @@ static void Mission2_LoadChallenge(int idx) {
 
 static void Mission2_Init(void) {
     memset(&m2, 0, sizeof(m2));
-    memcpy(m2.challenges, s_challenges, sizeof(s_challenges));
+    Mission2_BuildChallenges();
     Mission2_LoadChallenge(0);
     TriviaManager_StartMission(MISSION_2_POLIMEROS);
 }
@@ -142,14 +141,18 @@ static void Mission2_Update(float dt) {
         m2.feedback_timer += dt;
         if (m2.feedback_timer > 2.5f && m2.chain_correct) {
             int next = m2.current_challenge + 1;
-            if (next < M2_CHALLENGE_COUNT)
+            if (next < M2_CHALLENGE_COUNT) {
+                Mission2_BuildChallenges();   /* re-read locale in case lang changed */
                 Mission2_LoadChallenge(next);
-            else {
+            } else {
                 m2.minigame_done = true;
                 m2.trivia_phase  = true;
             }
         } else if (m2.feedback_timer > 2.0f && !m2.chain_correct) {
-            for (int i = 0; i < M2_CHAIN_LEN; i++) { m2.slots[i].filled = false; m2.slots[i].content[0] = '\0'; }
+            for (int i = 0; i < M2_CHAIN_LEN; i++) {
+                m2.slots[i].filled = false;
+                m2.slots[i].content[0] = '\0';
+            }
             for (int i = 0; i < M2_MONOMER_PALETTE; i++) m2.palette[i].used = false;
             m2.check_triggered = false;
         }
@@ -160,7 +163,8 @@ static void Mission2_Update(float dt) {
         Monomer *mon = &m2.palette[i];
         if (mon->used) continue;
         if (!mon->dragging) {
-            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(mouse, mon->rect)) {
+            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
+                CheckCollisionPointRec(mouse, mon->rect)) {
                 mon->dragging = true;
                 mon->drag_offset.x = mouse.x - mon->rect.x;
                 mon->drag_offset.y = mouse.y - mon->rect.y;
@@ -172,7 +176,8 @@ static void Mission2_Update(float dt) {
                 mon->dragging = false;
                 bool dropped = false;
                 for (int s = 0; s < M2_CHAIN_LEN; s++) {
-                    if (!m2.slots[s].filled && CheckCollisionRecs(mon->rect, m2.slots[s].rect)) {
+                    if (!m2.slots[s].filled &&
+                        CheckCollisionRecs(mon->rect, m2.slots[s].rect)) {
                         strncpy(m2.slots[s].content, mon->monomer_name, 31);
                         m2.slots[s].filled = true;
                         mon->used = true;
@@ -181,62 +186,72 @@ static void Mission2_Update(float dt) {
                         break;
                     }
                 }
-                if (!dropped) { mon->rect.x = mon->origin.x; mon->rect.y = mon->origin.y; }
+                if (!dropped) {
+                    mon->rect.x = mon->origin.x;
+                    mon->rect.y = mon->origin.y;
+                }
             }
         }
     }
 }
 
 static void Mission2_DrawMinigame(void) {
-    DrawText("MISION 2 — Cadena de Polimeros", 20, 14, 26, COL_UI_ACCENT);
-    DrawText("Arrastra el monomero correcto a cada casillero de la cadena", 20, 48, 20, LIGHTGRAY);
+    DrawText(LOC(S_M2_TITLE), 20, 14, 26, COL_UI_ACCENT);
+    DrawText(LOC(S_M2_INSTRUCTION), 20, 48, 20, LIGHTGRAY);
 
     const PolymerChallenge *ch = &m2.challenges[m2.current_challenge];
-    DrawText("Construye la cadena del polimero:", 20, 86, 20, WHITE);
+    DrawText(LOC(S_M2_BUILD_LABEL), 20, 86, 20, WHITE);
     DrawText(ch->polymer_name, 20, 112, 32, ch->color);
+
     char prog[32];
-    snprintf(prog, sizeof(prog), "Reto %d de %d", m2.current_challenge+1, M2_CHALLENGE_COUNT);
+    snprintf(prog, sizeof(prog), LOC(S_M2_CHALLENGE_PROG),
+             m2.current_challenge+1, M2_CHALLENGE_COUNT);
     DrawText(prog, 20, 154, 18, GRAY);
 
-    /* cadena */
+    /* chain slots */
     for (int i = 0; i < M2_CHAIN_LEN; i++) {
         ChainSlot *s = &m2.slots[i];
         Color border = COL_UI_BORDER;
         Color bg     = COL_UI_PANEL;
         if (s->filled) {
-            border = m2.check_triggered ? (s->correct ? COL_CORRECT : COL_WRONG) : ch->color;
+            border = m2.check_triggered
+                        ? (s->correct ? COL_CORRECT : COL_WRONG)
+                        : ch->color;
             bg = ColorAlpha(border, 0.2f);
         }
         DrawRectangleRec(s->rect, bg);
         DrawRectangleLinesEx(s->rect, 2.5f, border);
         if (s->filled)
-            UI_DrawWrappedText(s->content, (int)(s->rect.x+6), (int)(s->rect.y+10), (int)(s->rect.width-8), 16, WHITE);
+            UI_DrawWrappedText(s->content,
+                               (int)(s->rect.x+6), (int)(s->rect.y+10),
+                               (int)(s->rect.width-8), 16, WHITE);
         else {
             int qw = MeasureText("?", 28);
             DrawText("?", (int)(s->rect.x + s->rect.width/2 - qw/2),
                      (int)(s->rect.y + s->rect.height/2 - 14), 28, GRAY);
         }
-        if (i < M2_CHAIN_LEN - 1) {
-            float ax = s->rect.x + s->rect.width + 3;
-            float ay = s->rect.y + s->rect.height/2;
-            DrawText("->", (int)(ax), (int)(ay - 12), 20, GRAY);
-        }
+        if (i < M2_CHAIN_LEN - 1)
+            DrawText("->", (int)(s->rect.x + s->rect.width + 3),
+                     (int)(s->rect.y + s->rect.height/2 - 12), 20, GRAY);
     }
 
     DrawLine(0, SCREEN_H - 160, GAME_W, SCREEN_H - 160, COL_UI_BORDER);
-    DrawText("Monomeros disponibles:", 20, SCREEN_H - 152, 18, LIGHTGRAY);
+    DrawText(LOC(S_M2_MONOMERS_LABEL), 20, SCREEN_H - 152, 18, LIGHTGRAY);
 
+    /* palette */
     for (int i = 0; i < M2_MONOMER_PALETTE; i++) {
         Monomer *mon = &m2.palette[i];
         if (mon->used) continue;
         Color c = ColorAlpha(mon->color, mon->dragging ? 0.95f : 0.72f);
         DrawRectangleRec(mon->rect, c);
         DrawRectangleLinesEx(mon->rect, mon->dragging ? 3.0f : 1.5f, mon->color);
-        UI_DrawWrappedText(mon->monomer_name, (int)(mon->rect.x+5), (int)(mon->rect.y+8), (int)(mon->rect.width-6), 14, WHITE);
+        UI_DrawWrappedText(mon->monomer_name,
+                           (int)(mon->rect.x+5), (int)(mon->rect.y+8),
+                           (int)(mon->rect.width-6), 14, WHITE);
     }
 
     if (m2.check_triggered) {
-        const char *msg = m2.chain_correct ? "Cadena correcta!" : "Incorrecto, intentalo de nuevo";
+        const char *msg = m2.chain_correct ? LOC(S_M2_CHAIN_OK) : LOC(S_M2_CHAIN_WRONG);
         DrawText(msg, 20, 196, 22, m2.chain_correct ? COL_CORRECT : COL_WRONG);
         if (m2.show_fact)
             UI_DrawWrappedText(m2.fun_fact, 20, 226, GAME_W - 40, 16, LIGHTGRAY);
@@ -245,9 +260,8 @@ static void Mission2_DrawMinigame(void) {
 
 static void Mission2_DrawTrivia(void) {
     DrawRectangle(0, 0, GAME_W, SCREEN_H, COL_UI_BG);
-    const char *inst = "MISION 2 — Trivia: Polimeros";
-    int iw = MeasureText(inst, 28);
-    DrawText(inst, GAME_W/2 - iw/2, 20, 28, COL_UI_ACCENT);
+    int iw = MeasureText(LOC(S_M2_TRIVIA_TITLE), 28);
+    DrawText(LOC(S_M2_TRIVIA_TITLE), GAME_W/2 - iw/2, 20, 28, COL_UI_ACCENT);
     TriviaManager_DrawPanel((Rectangle){(GAME_W - 820)/2.0f, 70, 820, SCREEN_H - 80});
 }
 
@@ -256,7 +270,7 @@ static void Mission2_Draw(void) {
     if (!m2.trivia_phase) {
         Mission2_DrawMinigame();
         Rectangle back = {GAME_W - 200, SCREEN_H - 60, 180, 44};
-        UI_Button(back, "Menu Principal", COL_UI_PANEL, WHITE);
+        UI_Button(back, LOC(S_BTN_MENU_MAIN), COL_UI_PANEL, WHITE);
     } else {
         Mission2_DrawTrivia();
     }
@@ -264,15 +278,9 @@ static void Mission2_Draw(void) {
 
 void Mission2_Run(void) {
     bool go = ShowMissionIntro(2,
-        "Cadena de Polimeros",
-        "El plastico: una cadena interminable en el oceano",
-        "Los plasticos son polimeros: largas cadenas de moleculas repetidas llamadas monomeros. "
-        "Esta estructura molecular es precisamente lo que los hace tan duraderos... y tan "
-        "peligrosos. Una botella de PET en el Gran Parche del Pacifico puede tardar hasta "
-        "450 anos en degradarse, pero nunca desaparece del todo: se fragmenta en microplasticos "
-        "que persisten indefinidamente. El Gran Parche contiene aproximadamente 1.8 billones "
-        "de fragmentos plasticos. Entender la quimica del plastico nos ayuda a tomar mejores "
-        "decisiones sobre cuales plasticos usar y cuales evitar.");
+        LOC(S_M2_INTRO_TITLE),
+        LOC(S_M2_INTRO_TOPIC),
+        LOC(S_M2_INTRO_BODY));
     if (!go) { g_current_scene = SCENE_MAIN_MENU; return; }
 
     Mission2_Init();
@@ -286,8 +294,10 @@ void Mission2_Run(void) {
         if (!m2.trivia_phase) {
             Rectangle back = {GAME_W - 200, SCREEN_H - 60, 180, 44};
             Vector2 mouse = GetMousePosition();
-            if (CheckCollisionPointRec(mouse, back) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-                g_current_scene = SCENE_MAIN_MENU; return;
+            if (CheckCollisionPointRec(mouse, back) &&
+                IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                g_current_scene = SCENE_MAIN_MENU;
+                return;
             }
         }
     }

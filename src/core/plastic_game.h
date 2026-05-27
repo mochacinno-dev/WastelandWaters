@@ -9,24 +9,12 @@
 #include <math.h>
 #include <time.h>
 
-/* ─────────────────────────────────────────────
-   VENTANA Y FPS
-───────────────────────────────────────────── */
 #define SCREEN_W   1600
 #define SCREEN_H    900
 #define TARGET_FPS  120
+#define GAME_W     1080
+#define TRIVIA_W    520
 
-/* ─────────────────────────────────────────────
-   LAYOUT — panel de trivia a la derecha
-   El minijuego ocupa GAME_W píxeles de ancho.
-   El panel de trivia ocupa TRIVIA_W píxeles.
-───────────────────────────────────────────── */
-#define GAME_W     1080   /* ancho del área de minijuego */
-#define TRIVIA_W    520   /* ancho del panel de trivia   */
-
-/* ─────────────────────────────────────────────
-   MISIONES
-───────────────────────────────────────────── */
 typedef enum {
     MISSION_NONE = -1,
     MISSION_1_TIPOS_PLASTICO = 0,
@@ -40,9 +28,6 @@ typedef enum {
     MISSION_COUNT
 } MissionID;
 
-/* ─────────────────────────────────────────────
-   SISTEMA DE TRIVIA
-───────────────────────────────────────────── */
 #define MAX_QUESTIONS         50
 #define QUESTIONS_PER_MISSION  6
 #define MAX_OPTION_LEN       256
@@ -68,7 +53,6 @@ typedef struct {
     Question    questions[MAX_QUESTIONS];
     int         total_questions;
     int         mission_indices[MISSION_COUNT][QUESTIONS_PER_MISSION];
-
     MissionID   current_mission;
     int         current_q_order[QUESTIONS_PER_MISSION];
     int         current_q_pos;
@@ -77,12 +61,10 @@ typedef struct {
     TriviaState state;
     float       feedback_timer;
     float       feedback_duration;
-
     int         score;
     int         streak;
     int         points_per_correct;
     int         streak_bonus;
-
     void (*on_answer_result)(bool correct, const char *explanation);
     void (*on_mission_complete)(void);
 } TriviaManager;
@@ -97,43 +79,21 @@ void TriviaManager_Update(float dt);
 void TriviaManager_DrawPanel(Rectangle panel_rect);
 const Question *TriviaManager_CurrentQuestion(void);
 
-/* ─────────────────────────────────────────────
-   UTILIDADES DE UI
-───────────────────────────────────────────── */
 bool UI_Button(Rectangle rect, const char *label, Color bg, Color fg);
-void UI_DrawWrappedText(const char *text, int x, int y, int width,
-                        int font_size, Color color);
+void UI_DrawWrappedText(const char *text, int x, int y, int width, int font_size, Color color);
 void UI_DrawPanel(Rectangle r, Color bg, Color border, int radius);
+bool ShowMissionIntro(int mission_number, const char *mission_title,
+                      const char *topic_title, const char *body_text);
 
-/* Pantalla de introducción antes de cada misión.
-   Devuelve true si el jugador presionó "Comenzar",
-   false si presionó "Menú Principal". */
-bool ShowMissionIntro(int mission_number,
-                      const char *mission_title,
-                      const char *topic_title,
-                      const char *body_text);
-
-/* ─────────────────────────────────────────────
-   ESCENAS
-───────────────────────────────────────────── */
 typedef enum {
     SCENE_MAIN_MENU = 0,
-    SCENE_MISSION_1,
-    SCENE_MISSION_2,
-    SCENE_MISSION_3,
-    SCENE_MISSION_4,
-    SCENE_MISSION_5,
-    SCENE_MISSION_6,
-    SCENE_MISSION_7,
-    SCENE_MISSION_8,
+    SCENE_MISSION_1, SCENE_MISSION_2, SCENE_MISSION_3, SCENE_MISSION_4,
+    SCENE_MISSION_5, SCENE_MISSION_6, SCENE_MISSION_7, SCENE_MISSION_8,
     SCENE_RESULTS
 } SceneID;
 
 extern SceneID g_current_scene;
 
-/* ─────────────────────────────────────────────
-   COLORES DEL JUEGO
-───────────────────────────────────────────── */
 #define COL_OCEAN       CLITERAL(Color){ 10,  90, 140, 255 }
 #define COL_OCEAN_LIGHT CLITERAL(Color){ 30, 130, 180, 255 }
 #define COL_PLASTIC_RED CLITERAL(Color){220,  60,  50, 255 }

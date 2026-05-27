@@ -18,7 +18,7 @@ Cada misión está enfocada a un término diferente o pilar diferente en el tema
 - [ ] Trailer
 - [ ] Presentación y Tutorial
 - [ ] Manual general de uso
-- [ ] Arreglo de Misión 2: Cadenas de Polímeros.
+- [x] Conversión a formato web
 
 ### Compilation instructions
 
