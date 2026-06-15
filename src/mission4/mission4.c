@@ -25,6 +25,7 @@ typedef struct {
 typedef enum { M4_ACT_IDENTIFY=0, M4_ACT_RANKING, M4_ACT_RIVER, M4_ACT_DONE } M4Activity;
 
 typedef struct {
+    Texture2D map_tex;
     CountryPin  countries[M4_COUNTRY_COUNT];
     RiverData   yangtze;
     M4Activity  activity;
@@ -52,16 +53,16 @@ static void Mission4_BuildCountries(void) {
         float nx, ny;
         Color col;
     } defs[M4_COUNTRY_COUNT] = {
-        { S_M4_C0, S_M4_REGION_ASIA,   1, 0.77f,0.38f, RED         },
-        { S_M4_C1, S_M4_REGION_ASIA,   2, 0.80f,0.56f, ORANGE      },
-        { S_M4_C2, S_M4_REGION_ASIA,   3, 0.82f,0.50f, YELLOW      },
-        { S_M4_C3, S_M4_REGION_ASIA,   4, 0.79f,0.46f, COL_PLASTIC_YEL },
-        { S_M4_C4, S_M4_REGION_ASIA,   5, 0.72f,0.54f, LIME        },
-        { S_M4_C5, S_M4_REGION_ASIA,   6, 0.77f,0.48f, SKYBLUE     },
-        { S_M4_C6, S_M4_REGION_AFRICA, 7, 0.56f,0.40f, PURPLE      },
-        { S_M4_C7, S_M4_REGION_AFRICA, 8, 0.50f,0.52f, VIOLET      },
-        { S_M4_C8, S_M4_REGION_LAM,    9, 0.34f,0.64f, GREEN       },
-        { S_M4_C9, S_M4_REGION_ASIA,  10, 0.70f,0.44f, PINK        },
+        { S_M4_C0, S_M4_REGION_ASIA,   1, 0.795f, 0.355f, RED         },  // China
+        { S_M4_C1, S_M4_REGION_ASIA,   2, 0.810f, 0.520f, ORANGE      },  // Indonesia
+        { S_M4_C2, S_M4_REGION_ASIA,   3, 0.835f, 0.460f, YELLOW      },  // Filipinas
+        { S_M4_C3, S_M4_REGION_ASIA,   4, 0.800f, 0.430f, COL_PLASTIC_YEL }, // Vietnam
+        { S_M4_C4, S_M4_REGION_ASIA,   5, 0.745f, 0.490f, LIME        },  // Sri Lanka
+        { S_M4_C5, S_M4_REGION_ASIA,   6, 0.795f, 0.445f, SKYBLUE     },  // Tailandia
+        { S_M4_C6, S_M4_REGION_AFRICA, 7, 0.565f, 0.365f, PURPLE      },  // Egipto
+        { S_M4_C7, S_M4_REGION_AFRICA, 8, 0.520f, 0.470f, VIOLET      },  // Nigeria
+        { S_M4_C8, S_M4_REGION_LAM,    9, 0.340f, 0.590f, GREEN       },  // Brasil
+        { S_M4_C9, S_M4_REGION_ASIA,  10, 0.720f, 0.415f, PINK        },  // India
     };
     for (int i = 0; i < M4_COUNTRY_COUNT; i++) {
         strncpy(m4.countries[i].name,   LOC(defs[i].name_key),   63);
@@ -76,6 +77,9 @@ static void Mission4_BuildCountries(void) {
 
 static void Mission4_Init(void) {
     memset(&m4, 0, sizeof(m4));
+
+    m4.map_tex = LoadTexture("assets/world_map.png");
+
     Mission4_BuildCountries();
 
     m4.yangtze.points[0]=(Vector2){0.73f,0.36f};
@@ -202,8 +206,21 @@ static void Mission4_Update(float dt) {
 
 static void Mission4_DrawMap(void) {
     DrawRectangle(M4_MAP_X, M4_MAP_Y, M4_MAP_W, M4_MAP_H, COL_OCEAN);
-    DrawRectangleLinesEx((Rectangle){M4_MAP_X,M4_MAP_Y,M4_MAP_W,M4_MAP_H}, 2, COL_UI_BORDER);
+    // Dibujar el mapa real escalado al área definida
+    if (m4.map_tex.id > 0) {
+        Rectangle src  = { 0, 0,
+                           (float)m4.map_tex.width,
+                           (float)m4.map_tex.height };
+        Rectangle dest = { M4_MAP_X, M4_MAP_Y, M4_MAP_W, M4_MAP_H };
+        DrawTexturePro(m4.map_tex, src, dest,
+                       (Vector2){0, 0}, 0.0f, WHITE);
+    }
+
+    DrawRectangleLinesEx(
+        (Rectangle){M4_MAP_X, M4_MAP_Y, M4_MAP_W, M4_MAP_H},
+        2, COL_UI_BORDER);
     DrawText(LOC(S_M4_MAP_LABEL), M4_MAP_X+6, M4_MAP_Y+6, 14, COL_UI_BORDER);
+
     for (int i = 0; i < M4_COUNTRY_COUNT; i++) {
         Vector2 p = NormToMap(m4.countries[i].norm_x, m4.countries[i].norm_y);
         Color c = m4.countries[i].selected
@@ -300,5 +317,7 @@ void Mission4_Run(void) {
             }
         }
     }
+    UnloadTexture(m4.map_tex);
+
     g_current_scene = SCENE_MISSION_5;
 }

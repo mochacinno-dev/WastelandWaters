@@ -114,6 +114,7 @@ emcc -std=c99 -O3 \
     --shell-file "${SHELL_HTML}"    \
     \
     `# ── Output: .html + .js + .wasm (all in OUT_DIR) ──────────` \
+    --preload-file assets/ \ 
     -o "${TARGET}.html"
 
 echo ""
