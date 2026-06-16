@@ -252,7 +252,7 @@ static void Mission4_DrawMinigame(void) {
             DrawRectangleLinesEx(slot, 1.5f, cp->color);
             char label[80];
             snprintf(label, sizeof(label), "#%d  %s", i+1, cp->name);
-            DrawText(label, (int)(rx+10), (int)(ry+i*46+10), 18, WHITE);
+            DrawText(label, (int)(rx+10), (int)(ry+i*46+10), 18, BLACK);
         }
     }
     if (m4.activity == M4_ACT_RIVER) {
