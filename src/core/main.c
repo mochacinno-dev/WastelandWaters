@@ -133,12 +133,17 @@ static void ResultsScreen_Run(void) {
 
         DrawLangButtons();
         
-        /* Draw logo texture instead of S_VERSION */
+        /* Draw logo texture in bottom-right corner - Results Screen */
         if (g_logo_texture.id > 0) {
-            float logo_w = 120, logo_h = 40;
+            float logo_scale = 0.18f;  /* Ajustable: 0.15-0.25 */
+            float logo_width = g_logo_texture.width * logo_scale;
+            float logo_height = g_logo_texture.height * logo_scale;
+            float logo_x = SCREEN_W - logo_width - 20;   /* 20px from right edge */
+            float logo_y = SCREEN_H - logo_height - 20;  /* 20px from bottom edge */
+            
             DrawTextureEx(g_logo_texture,
-                          (Vector2){SCREEN_W - 340, SCREEN_H - 40},
-                          0.0f, logo_w / g_logo_texture.width, WHITE);
+                          (Vector2){logo_x, logo_y},
+                          0.0f, logo_scale, WHITE);
         }
         
         EndDrawing();
@@ -214,12 +219,17 @@ static void MainMenu_Run(void) {
         snprintf(pts, sizeof(pts), "%d", g_trivia.score);
         DrawText(pts, 220, SCREEN_H - 36, 18, COL_UI_ACCENT);
 
-        /* Draw logo texture instead of S_VERSION */
+        /* Draw logo texture in bottom-right corner - Main Menu */
         if (g_logo_texture.id > 0) {
-            float logo_w = 120, logo_h = 40;
+            float logo_scale = 0.20f;  /* Ajustable: 0.15-0.25 */
+            float logo_width = g_logo_texture.width * logo_scale;
+            float logo_height = g_logo_texture.height * logo_scale;
+            float logo_x = SCREEN_W - logo_width - 20;   /* 20px from right edge */
+            float logo_y = SCREEN_H - logo_height - 20;  /* 20px from bottom edge */
+            
             DrawTextureEx(g_logo_texture,
-                          (Vector2){SCREEN_W - 340, SCREEN_H - 26},
-                          0.0f, logo_w / g_logo_texture.width, WHITE);
+                          (Vector2){logo_x, logo_y},
+                          0.0f, logo_scale, WHITE);
         }
 
         /* language buttons — restart menu loop on change */
@@ -236,7 +246,7 @@ static void MainMenu_Run(void) {
    MAIN
 ────────────────────────────────────────────────── */
 int main(void) {
-    InitWindow(SCREEN_W, SCREEN_H, "Wasteland Waters v1.8.92");
+    InitWindow(SCREEN_W, SCREEN_H, "Wasteland Waters v1.9.99");
     SetTargetFPS(TARGET_FPS);
     srand((unsigned)time(NULL));
 

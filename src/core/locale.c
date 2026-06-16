@@ -18,7 +18,7 @@ static const char *s_strings[2][S_COUNT] = {
 /* S_BTN_START_ALL   */ "INICIAR DESDE EL PRINCIPIO",
 /* S_BTN_MENU_MAIN   */ "Menu Principal",
 /* S_SCORE_ACCUM     */ "Puntaje acumulado:",
-/* S_VERSION         */ "CoffeeShop Development  [v1.8.92]",
+/* S_VERSION         */ "CoffeeShop Development  [v1.9.99]",
 /* S_LANG_ES         */ "ES",
 /* S_LANG_EN         */ "EN",
 
@@ -335,7 +335,7 @@ static const char *s_strings[2][S_COUNT] = {
 /* S_BTN_START_ALL   */ "START FROM THE BEGINNING",
 /* S_BTN_MENU_MAIN   */ "Main Menu",
 /* S_SCORE_ACCUM     */ "Accumulated score:",
-/* S_VERSION         */ "CoffeeShop Development  [v1.8.92]",
+/* S_VERSION         */ "CoffeeShop Development  [v1.9.99]",
 /* S_LANG_ES         */ "ES",
 /* S_LANG_EN         */ "EN",
 
