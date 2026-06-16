@@ -228,7 +228,7 @@ static void Mission4_DrawMap(void) {
                     : ColorAlpha(m4.countries[i].color, 0.70f);
         DrawCircleV(p, 12, c);
         DrawCircleLinesV(p, 12, WHITE);
-        DrawText(m4.countries[i].name, (int)(p.x+14), (int)(p.y-8), 14, WHITE);
+        DrawText(m4.countries[i].name, (int)(p.x+14), (int)(p.y-8), 14, BLACK);
     }
 }
 
