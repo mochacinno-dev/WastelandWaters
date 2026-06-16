@@ -11,6 +11,11 @@ void Mission7_Run(void);
 void Mission8_Run(void);
 
 /* ──────────────────────────────────────────────────
+   GLOBAL LOGO TEXTURE
+   ────────────────────────────────────────────────── */
+static Texture2D g_logo_texture;
+
+/* ──────────────────────────────────────────────────
    LANGUAGE TOGGLE HELPER
    Call this INSIDE BeginDrawing() / EndDrawing().
    Returns true if the language was just changed
@@ -127,7 +132,15 @@ static void ResultsScreen_Run(void) {
         }
 
         DrawLangButtons();
-        DrawText(LOC(S_VERSION), SCREEN_W - 340, SCREEN_H - 26, 14, DARKGRAY);
+        
+        /* Draw logo texture instead of S_VERSION */
+        if (g_logo_texture.id > 0) {
+            float logo_w = 120, logo_h = 40;
+            DrawTextureEx(g_logo_texture,
+                          (Vector2){SCREEN_W - 340, SCREEN_H - 40},
+                          0.0f, logo_w / g_logo_texture.width, WHITE);
+        }
+        
         EndDrawing();
     }
 }
@@ -201,7 +214,13 @@ static void MainMenu_Run(void) {
         snprintf(pts, sizeof(pts), "%d", g_trivia.score);
         DrawText(pts, 220, SCREEN_H - 36, 18, COL_UI_ACCENT);
 
-        DrawText(LOC(S_VERSION), SCREEN_W - 340, SCREEN_H - 26, 14, DARKGRAY);
+        /* Draw logo texture instead of S_VERSION */
+        if (g_logo_texture.id > 0) {
+            float logo_w = 120, logo_h = 40;
+            DrawTextureEx(g_logo_texture,
+                          (Vector2){SCREEN_W - 340, SCREEN_H - 26},
+                          0.0f, logo_w / g_logo_texture.width, WHITE);
+        }
 
         /* language buttons — restart menu loop on change */
         if (DrawLangButtons()) {
@@ -221,6 +240,9 @@ int main(void) {
     SetTargetFPS(TARGET_FPS);
     srand((unsigned)time(NULL));
 
+    /* Load the logo texture */
+    g_logo_texture = LoadTexture("assets/lovebound.png");
+
     TriviaManager_Init();
     g_current_scene = SCENE_MAIN_MENU;
 
@@ -238,6 +260,11 @@ int main(void) {
             case SCENE_RESULTS:    ResultsScreen_Run(); break;
             default:               g_current_scene = SCENE_MAIN_MENU; break;
         }
+    }
+
+    /* Unload the logo texture before closing */
+    if (g_logo_texture.id > 0) {
+        UnloadTexture(g_logo_texture);
     }
 
     CloseWindow();
