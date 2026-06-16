@@ -607,7 +607,7 @@ static Question s_question_bank_en[MAX_QUESTIONS] = {
 ────────────────────────────────────────────────── */
 void TriviaManager_Init(void) {
     memset(&g_trivia, 0, sizeof(g_trivia));
-    g_trivia.feedback_duration = 3.5f;
+    g_trivia.feedback_duration = 999999.0f;  /* Sin límite de tiempo (muy grande) */
     g_trivia.points_per_correct = 100;
     g_trivia.streak_bonus       = 50;
     g_trivia.state              = TRIVIA_IDLE;
@@ -685,20 +685,27 @@ void TriviaManager_SubmitAnswer(int option_index) {
         g_trivia.on_answer_result(g_trivia.answer_correct, q->explanation);
 }
 
+/* Avanzar a la siguiente pregunta (llamado por botón "Siguiente") */
+static void TriviaManager_NextQuestion(void) {
+    if (g_trivia.state != TRIVIA_FEEDBACK) return;
+    
+    g_trivia.current_q_pos++;
+    g_trivia.selected_answer = -1;
+    g_trivia.feedback_timer  = 0.0f;
+    
+    if (g_trivia.current_q_pos >= QUESTIONS_PER_MISSION) {
+        g_trivia.state = TRIVIA_MISSION_COMPLETE;
+        if (g_trivia.on_mission_complete)
+            g_trivia.on_mission_complete();
+    } else {
+        g_trivia.state = TRIVIA_SHOWING_QUESTION;
+    }
+}
+
 void TriviaManager_Update(float dt) {
     if (g_trivia.state == TRIVIA_FEEDBACK) {
         g_trivia.feedback_timer += dt;
-        if (g_trivia.feedback_timer >= g_trivia.feedback_duration) {
-            g_trivia.current_q_pos++;
-            g_trivia.selected_answer = -1;
-            if (g_trivia.current_q_pos >= QUESTIONS_PER_MISSION) {
-                g_trivia.state = TRIVIA_MISSION_COMPLETE;
-                if (g_trivia.on_mission_complete)
-                    g_trivia.on_mission_complete();
-            } else {
-                g_trivia.state = TRIVIA_SHOWING_QUESTION;
-            }
-        }
+        /* Sin avance automático - el botón "Siguiente" controla el flujo */
     }
 }
 
@@ -789,7 +796,7 @@ void TriviaManager_DrawPanel(Rectangle r) {
         cy += 74;
     }
 
-    /* feedback */
+    /* feedback + "Next" button */
     if (g_trivia.state == TRIVIA_FEEDBACK) {
         cy += 14;
         Color fbcol = g_trivia.answer_correct ? COL_CORRECT : COL_WRONG;
@@ -797,12 +804,12 @@ void TriviaManager_DrawPanel(Rectangle r) {
                  (int)cx, (int)cy, 24, fbcol);
         cy += 34;
         UI_DrawWrappedText(q->explanation, (int)cx, (int)cy, (int)pw, 16, LIGHTGRAY);
-
-        float t = g_trivia.feedback_timer / g_trivia.feedback_duration;
-        Rectangle bar_bg = { cx, r.y + r.height - 14, pw, 8 };
-        Rectangle bar_fg = { cx, r.y + r.height - 14, pw * (1.0f - t), 8 };
-        DrawRectangleRec(bar_bg, COL_UI_BORDER);
-        DrawRectangleRec(bar_fg, fbcol);
+        
+        /* Botón "Siguiente" */
+        cy += 110;
+        Rectangle btn_next = { cx, cy, pw, 50 };
+        if (UI_Button(btn_next, LOC(S_BTN_NEXT), COL_UI_ACCENT, BLACK))
+            TriviaManager_NextQuestion();
     }
 }
 

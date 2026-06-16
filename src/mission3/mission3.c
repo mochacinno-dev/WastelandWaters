@@ -5,6 +5,9 @@
 #define M3_MAX_FILTERS     20
 #define M3_WAYPOINT_COUNT   6
 #define M3_TOTAL_WAVES      3
+#define M3_FILTER_HEALTH    3.0f    /* salud inicial del filtro */
+#define M3_DEGRADE_RATE     0.25f   /* velocidad de degradación por segundo */
+#define M3_REPAIR_COST      0.8f    /* cantidad de salud restaurada al hacer clic */
 
 typedef struct {
     Vector2 pos;
@@ -20,6 +23,9 @@ typedef struct {
     Vector2 pos;
     float   radius;
     bool    active;
+    float   health;              /* salud del filtro (0-3) */
+    float   max_health;          /* salud máxima */
+    float   last_repair_time;    /* tiempo desde última reparación */
 } Filter;
 
 typedef struct {
@@ -81,6 +87,42 @@ static void Mission3_SpawnParticle(void) {
     }
 }
 
+static void Mission3_PlaceFilter(Vector2 mouse_pos) {
+    if (m3.filter_count >= M3_MAX_FILTERS) return;
+    
+    m3.filters[m3.filter_count].pos           = mouse_pos;
+    m3.filters[m3.filter_count].radius        = 46.0f;
+    m3.filters[m3.filter_count].active        = true;
+    m3.filters[m3.filter_count].health        = M3_FILTER_HEALTH;
+    m3.filters[m3.filter_count].max_health    = M3_FILTER_HEALTH;
+    m3.filters[m3.filter_count].last_repair_time = 0.0f;
+    m3.filter_count++;
+}
+
+static void Mission3_RepairFilter(int filter_idx) {
+    if (filter_idx < 0 || filter_idx >= m3.filter_count) return;
+    if (!m3.filters[filter_idx].active) return;
+    
+    /* Restaurar salud (máximo hasta max_health) */
+    m3.filters[filter_idx].health = m3.filters[filter_idx].max_health;
+    m3.filters[filter_idx].last_repair_time = 0.0f;
+}
+
+static void Mission3_UpdateFilters(float dt) {
+    for (int f = 0; f < m3.filter_count; f++) {
+        if (!m3.filters[f].active) continue;
+        
+        /* Degradar salud con el tiempo */
+        m3.filters[f].health -= M3_DEGRADE_RATE * dt;
+        if (m3.filters[f].health < 0.0f) {
+            m3.filters[f].health = 0.0f;
+            m3.filters[f].active = false;
+        }
+        
+        m3.filters[f].last_repair_time += dt;
+    }
+}
+
 static void Mission3_Update(float dt) {
     if (m3.trivia_phase) { TriviaManager_Update(dt); return; }
     if (m3.game_over) {
@@ -92,13 +134,25 @@ static void Mission3_Update(float dt) {
         return;
     }
 
+    /* Clic izquierdo para colocar filtro */
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && m3.filter_count < M3_MAX_FILTERS) {
         Vector2 mouse = GetMousePosition();
         if (mouse.x < GAME_W - 10 && mouse.y > 60) {
-            m3.filters[m3.filter_count].pos    = mouse;
-            m3.filters[m3.filter_count].radius = 46.0f;
-            m3.filters[m3.filter_count].active = true;
-            m3.filter_count++;
+            Mission3_PlaceFilter(mouse);
+        }
+    }
+
+    /* Clic derecho para reparar filtro bajo el ratón */
+    if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) {
+        Vector2 mouse = GetMousePosition();
+        for (int f = 0; f < m3.filter_count; f++) {
+            if (!m3.filters[f].active) continue;
+            float dx = mouse.x - m3.filters[f].pos.x;
+            float dy = mouse.y - m3.filters[f].pos.y;
+            if (dx*dx + dy*dy < m3.filters[f].radius * m3.filters[f].radius) {
+                Mission3_RepairFilter(f);
+                break;
+            }
         }
     }
 
@@ -109,6 +163,9 @@ static void Mission3_Update(float dt) {
         m3.spawned++;
         m3.spawn_timer = 0.0f;
     }
+
+    /* Actualizar degradación de filtros */
+    Mission3_UpdateFilters(dt);
 
     int active_count = 0;
     for (int i = 0; i < M3_MAX_PARTICLES; i++) {
@@ -122,7 +179,8 @@ static void Mission3_Update(float dt) {
         }
         bool caught = false;
         for (int f = 0; f < m3.filter_count; f++) {
-            if (m3.filters[f].active) {
+            /* Solo atrapar si el filtro está activo Y tiene salud */
+            if (m3.filters[f].active && m3.filters[f].health > 0.0f) {
                 float dx = p->pos.x - m3.filters[f].pos.x;
                 float dy = p->pos.y - m3.filters[f].pos.y;
                 if (dx*dx + dy*dy < m3.filters[f].radius * m3.filters[f].radius) {
@@ -177,7 +235,6 @@ static void Mission3_DrawRiver(void) {
     }
     Vector2 last = m3.waypoints[M3_WAYPOINT_COUNT-1];
     DrawRectangle((int)last.x, (int)last.y - 36, 110, 72, ColorAlpha(RED, 0.30f));
-    /* "Food Chain" label — two lines to fit */
     const char *fc = LOC(S_M3_FOOD_CHAIN_HP);
     DrawText(fc, (int)last.x + 4, (int)last.y - 34, 15, RED);
 }
@@ -188,14 +245,35 @@ static void Mission3_DrawMinigame(void) {
 
     Mission3_DrawRiver();
 
+    /* Dibujar filtros con indicador de salud */
     for (int f = 0; f < m3.filter_count; f++) {
+        float health_ratio = m3.filters[f].health / m3.filters[f].max_health;
+        bool is_active = m3.filters[f].active && m3.filters[f].health > 0.0f;
+        
+        /* Color según salud */
+        Color filter_color = is_active ? COL_PLASTIC_GRN : (Color){100, 100, 100, 150};
+        float alpha = is_active ? 0.28f : 0.10f;
+        
         DrawCircleV(m3.filters[f].pos, m3.filters[f].radius,
-                    ColorAlpha(COL_PLASTIC_GRN, 0.28f));
-        DrawCircleLinesV(m3.filters[f].pos, m3.filters[f].radius, COL_PLASTIC_GRN);
+                    ColorAlpha(filter_color, alpha));
+        DrawCircleLinesV(m3.filters[f].pos, m3.filters[f].radius, filter_color);
+        
+        /* Barra de salud encima del filtro */
+        float bar_w = 60.0f, bar_h = 6.0f;
+        Rectangle health_bg = {m3.filters[f].pos.x - bar_w/2, m3.filters[f].pos.y - 30, bar_w, bar_h};
+        Rectangle health_bar = {health_bg.x, health_bg.y, bar_w * health_ratio, bar_h};
+        
+        DrawRectangleRec(health_bg, ColorAlpha(BLACK, 0.5f));
+        Color bar_color = (health_ratio > 0.5f) ? COL_CORRECT : 
+                          (health_ratio > 0.2f) ? (Color){255, 200, 0, 255} : COL_WRONG;
+        DrawRectangleRec(health_bar, bar_color);
+        DrawRectangleLinesEx(health_bg, 1, LIGHTGRAY);
+        
         DrawText(LOC(S_M3_FILTER_LABEL),
                  (int)(m3.filters[f].pos.x-26), (int)(m3.filters[f].pos.y-9),
-                 14, COL_PLASTIC_GRN);
+                 14, is_active ? COL_PLASTIC_GRN : GRAY);
     }
+
     for (int i = 0; i < M3_MAX_PARTICLES; i++) {
         Microplastic *p = &m3.particles[i];
         if (!p->active) continue;
@@ -215,6 +293,9 @@ static void Mission3_DrawMinigame(void) {
     char cap_str[40];
     snprintf(cap_str, sizeof(cap_str), LOC(S_M3_CAPTURED), m3.captured_count);
     DrawText(cap_str, 240, SCREEN_H - 38, 18, COL_PLASTIC_GRN);
+
+    /* Instrucción de reparación */
+    DrawText( LOC(S_REPAIR_M4), 20, SCREEN_H - 90, 14, YELLOW);
 
     if (m3.wave_complete && m3.current_wave < m3.total_waves)
         DrawText(LOC(S_M3_WAVE_DONE), 20, 480, 26, COL_CORRECT);

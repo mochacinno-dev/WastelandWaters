@@ -246,7 +246,7 @@ static void MainMenu_Run(void) {
    MAIN
 ────────────────────────────────────────────────── */
 int main(void) {
-    InitWindow(SCREEN_W, SCREEN_H, "Wasteland Waters v1.9.99");
+    InitWindow(SCREEN_W, SCREEN_H, "Wasteland Waters v2.0.1");
     SetTargetFPS(TARGET_FPS);
     srand((unsigned)time(NULL));
 

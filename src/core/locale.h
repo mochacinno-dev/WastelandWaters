@@ -152,6 +152,9 @@ typedef enum {
     /* ── Mission 8 density labels ── */
     S_M8_TEMP_SHORT, S_M8_SALT_SHORT, S_M8_DENS_SHORT,
 
+    S_BTN_NEXT,
+
+    S_REPAIR_M4,
     /* must be last */
     S_COUNT
 } StrKey;

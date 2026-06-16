@@ -244,7 +244,7 @@ static void Mission4_DrawMinigame(void) {
 
     if (m4.activity == M4_ACT_RANKING) {
         float rx = 60, ry = 170;
-        DrawText(LOC(S_M4_RANK_LABEL), (int)rx, (int)ry-22, 16, WHITE);
+        DrawText(LOC(S_M4_RANK_LABEL), (int)rx, (int)ry-22, 16, BLACK);
         for (int i = 0; i < M4_COUNTRY_COUNT; i++) {
             CountryPin *cp = &m4.countries[m4.rank_order[i]];
             Rectangle slot = {rx, ry+i*46.0f, 360, 42};

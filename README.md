@@ -80,7 +80,7 @@ sudo pacman -S --needed gcc make raylib
 ### 2. Compilar y ejecutar
 
 ```bash
-git clone https://github.com/TU_USUARIO/WastelandWaters.git
+git clone https://github.com/mochacinno-dev/WastelandWaters.git
 cd WastelandWaters
 
 make          # compila todo en build/WastelandWaters
@@ -191,14 +191,14 @@ El primer `./build_web.sh` tarda varios minutos porque compila Raylib desde fuen
 - [x] Mejora de fuente, colores, accesibilidad y tiempo de feedback
 - [x] Pantallas de explicación educativa (intro por misión)
 - [x] Corrección ortográfica (RAE)
+- [x] Trailer del juego
+- [x] Pantalla de presentación y tutorial interactivo
+- [x] Sprites / ilustraciones (el juego funciona sin ellos con formas primitivas)
 
 ### Pendiente
 
-- [ ] Trailer del juego
-- [ ] Pantalla de presentación y tutorial interactivo
 - [ ] Manual general de uso (PDF)
 - [ ] Música y efectos de sonido (`InitAudioDevice` ya está reservado)
-- [ ] Sprites / ilustraciones (el juego funciona sin ellos con formas primitivas)
 - [ ] Pantalla de créditos y licencia
 
 ---
@@ -217,6 +217,6 @@ Para añadir preguntas, nuevas misiones, sprites o sonido, consulta **[devguide.
 
 ## Créditos
 
-Desarrollado por **CoffeeShop Development** como herramienta educativa sobre contaminación plástica oceánica, con énfasis en la Gran Mancha de Plástico del Pacífico Norte.
+Desarrollado por **Lovebound Games** como herramienta educativa sobre contaminación plástica oceánica, con énfasis en la Gran Mancha de Plástico del Pacífico Norte.
 
 Construido con [Raylib](https://www.raylib.com/) — una biblioteca de videojuegos simple y fácil de usar, escrita en C.

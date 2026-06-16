@@ -121,7 +121,7 @@ static void Mission8_Update(float dt) {
                 m8.selected_zone  = i;
                 m8.slider_temp    = m8.zones[i].temp;
                 m8.slider_salt    = m8.zones[i].salinity;
-                m8.interact_timer += 1.0f;
+                m8.interact_timer += 0.1f;
                 break;
             }
         }
@@ -146,7 +146,7 @@ static void Mission8_Update(float dt) {
         m8.ice_melt_timer       = 3.0f;
         strncpy(m8.status_msg, LOC(S_M8_ICE_MSG), sizeof(m8.status_msg)-1);
         m8.status_col = COL_WRONG;
-        m8.interact_timer += 3.0f;
+        m8.interact_timer += 0.1f;
     }
 
     float target_str = Compute_Circulation();
@@ -158,8 +158,8 @@ static void Mission8_Update(float dt) {
         if (m8.ice_melt_timer <= 0) m8.show_ice_melt_effect = false;
     }
 
-    m8.interact_timer += dt * 0.5f;
-    if (!m8.minigame_done && m8.interact_timer >= 10.0f) {
+    m8.interact_timer += dt * 0.1f;
+    if (!m8.minigame_done && m8.interact_timer >= 25.0f) {
         m8.minigame_done = true;
         m8.trivia_phase  = true;
     }
@@ -287,7 +287,7 @@ static void Mission8_DrawMinigame(void) {
                        760, 17, m8.status_col);
 
     /* interaction progress bar */
-    float pct = m8.interact_timer / 10.0f;
+    float pct = m8.interact_timer / 25.0f;
     if (pct > 1) pct = 1;
     DrawText(LOC(S_M8_INTERACT_LABEL), M8_PANEL_X, SCREEN_H-50, 16, GRAY);
     DrawRectangle(M8_PANEL_X+240, SCREEN_H-50, 400, 16, COL_UI_BORDER);
